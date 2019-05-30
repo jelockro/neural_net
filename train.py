@@ -13,11 +13,15 @@ import helper
 %matplotlib inline
 %config InlineBackend.figure_format = 'retina'
 
+import os
 import matplotlib.pyplot as plt
 import argparse
-parser = argparse.ArgumentParser(
-    description='This is a PyMOTW sample program',
-)
+import load_data.Dataset as DS
+testloader = DS.testloader
+trainloader = DS.trainloader
+validloader = DS.validloader
+
+
 
 # pass arguments of model to be trained,
 # future interaction to choose classifier options
@@ -25,26 +29,45 @@ parser = argparse.ArgumentParser(
 # python train.py data_directory
 # print out training loss, validation loss, and validation accuracy
 
-####################
-# Examples of usage
-####################
-#
-# Set directory to save checkpoints:
-# python train.py data_dir --save_dir save_directory
-#
-# Choose Architecture of model:
-# python train.py data_dir --arch "vgg13"
-#
-# Set Hyperparameters:
-# python train.py data_dir --learning_rate 0.01 --hidden_units 512\
-# --epochs 20
-#
-# Use GPU for Training:
-# python train.py data_dir --gpu
 
 
-class Model(MODEL):
+parser = argparse.ArgumentParser(
+    description='This is AI'
+)
+
+
+class Model:
+    current_dir = os.path.dirname(os.path.realpath(__file__))
+    parser = argparse.ArgumentParser(description="Caclulate x to the power of Y")
+    parser.add_argument('datadir', help="path to image dataset")
+    parser.add_argument("-s", "--save_dir", help="path to saved model")
+    parser.add_argument("-a", "--arch", default="vgg13", help="architecture of model")
+    parser.add_argument("-r", "--learning_rate", type=float, default=0.01, help="learning rate as float. Default: 0.01.")
+    parser.add_argument("--hidden_units", type=int, default="512", help="Number of hidden units. Default: 512.")
+    parser.add_argument("-e", "--epochs", type=int, default="20", help="Number of epochs. Default: 20")
+    parser.add_argument("--gpu", action='store_true', help="Turn on Cuda Usage")
+
+
+    def __init__(self, datadir, save_dir=current_dir, **kwargs ):
+        self.datadir = datadir
+        self.save_dir = save_dir
+        self.gpu = False
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+            ''' Default are:
+                    arch=vgg13,
+                    learning_rate=0.01
+                    hidden_units=512
+                    epochs=20
+                    gpu=False
+                    '''
+
     # Use GPU if it's available
+    def setDevice(self):
+        if self.gpu and torch.cuda.is_available():
+            device = torch.device("cuda")
+        else:
+            device = torch.device("cpu")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = models.vgg11(pretrained=True)
 
@@ -112,7 +135,7 @@ class Model(MODEL):
 
                 # Turn off gradients for validation, saves memory and computations
                 with torch.no_grad():
-                    for images, labels in testloader:
+                    for images, labels in validloader:
                         images, labels = images.to(device), labels.to(device)
                         log_ps = model(images)
                         batch_loss = criterion(log_ps, labels)
@@ -125,12 +148,12 @@ class Model(MODEL):
                         accuracy += torch.mean(equals.type(torch.FloatTensor)).item()
 
                 train_losses.append(running_loss / len(trainloader))
-                test_losses.append(test_loss / len(testloader))
+                test_losses.append(test_loss / len(validloader))
 
                 print("Epoch: {}/{}.. ".format(epoch + 1, epochs),
                       "Training Loss: {:.3f}.. ".format(running_loss / len(trainloader)),
-                      "Test Loss: {:.3f}.. ".format(test_loss / len(testloader)),
-                      "Test Accuracy: {:.3f}".format(accuracy / len(testloader)))
+                      "Test Loss: {:.3f}.. ".format(test_loss / len(validloader)),
+                      "Test Accuracy: {:.3f}".format(accuracy / len(validloader)))
 
 
     def plot_test(self, train_losses, test_losses):
@@ -138,13 +161,13 @@ class Model(MODEL):
         plt.plot(test_losses, label='Validation loss')
         plt.legend(frameon=False)
 
-    def validate_model(self, validloader, model):
+    def validate_model(self, testloader, model):
         test_loss = 0
         accuracy = 0
 
         # Turn off gradients for validation, saves memory and computations
         with torch.no_grad():
-            for images, labels in validloader:
+            for images, labels in testloader:
                 images, labels = images.to(device), labels.to(device)
                 log_ps = model(images)
                 batch_loss = criterion(log_ps, labels)
@@ -158,8 +181,8 @@ class Model(MODEL):
 
         test_loss.append(test_loss / len(validloader))
 
-        "Test Loss: {:.3f}.. ".format(test_loss / len(validloader)),
-        "Test Accuracy: {:.3f}".format(accuracy / len(validloader))
+        "Test Loss: {:.3f}.. ".format(test_loss / len(testloader)),
+        "Test Accuracy: {:.3f}".format(accuracy / len(testloader))
 
     def save_model_checkpoint(self, model):
         print("Our model: \n\n", model, '\n')
@@ -187,3 +210,37 @@ class Model(MODEL):
             return model
 
         loadedModel = rebuild('checkpoint.pth')
+
+
+####################
+# Examples of usage
+####################
+#
+# Set directory to save checkpoints:
+# python train.py data_dir --save_dir save_directory
+#
+# Choose Architecture of model:
+# python train.py data_dir --arch "vgg13"
+#
+# Set Hyperparameters:
+# python train.py data_dir --learning_rate 0.01 --hidden_units 512\
+# --epochs 20
+#
+# Use GPU for Training:
+# python train.py data_dir --gpu
+def main():
+    parser = argparse.ArgumentParser(description="Caclulate x to the power of Y")
+    parser.add_argument('data-dir', help="path to image dataset")
+    parser.add_argument("-s", "--save_dir", default=".", help="path to saved model")
+    parser.add_argument("-a", "--arch", default="vgg13", help="architecture of model")
+    parser.add_argument("-r", "--learning_rate", type=float, default="0.01", help="learning rate as float. Default: 0.01.")
+    parser.add_argument("--hidden_units", type=int, default="512", help="Number of hidden units. Default: 512.")
+    parser.add_argument("-e", "--epochs", type=int, default="20", help="Number of epochs. Default: 20")
+    parser.add_argument("--gpu", action='store_true', help="Turn on Cuda Usage")
+
+    args = parser.parse_args()
+
+
+
+if __name__ == "__main__":
+    main()

@@ -38,24 +38,34 @@ class Dataset():
         except FileExistsError:
             print("Directory already Exists")
 
-        #print(self.train_dir)
-        #print(self.valid_dir)
-        #print(self.test_dir)
-        directory_index = 0
-        directory_list = [self.train_dir, self.valid_dir, self.test_dir]
-        for filename in os.listdir(data_dir):
-            #print(filename)
-            if filename == "test" or filename == "train" or filename or "valid":
+    def sort_images(self):
+        dir_size = os.path.getsize(self.train_dir)
+
+        if os.path.getsize(self.train_dir) > 6:
+            print("Sub folders already exist and are populated. Directory size: {} bytes".format(dir_size))
+
+        else:
+            print('oh no')
+            directory_index = 0
+            directory_list = [self.train_dir, self.valid_dir, self.test_dir]
+
+
+            for filename in os.listdir(self.data_dir):
                 #print(filename)
-                continue
-            else:
-                #print(filename)
-                put_directory = directory_list[int(directory_index) % 3]
-                print(put_directory)
-                old_path = self.data_dir + filename
-                new_path = put_directory + filename
-                os.rename( old_path, new_path)
-                directory_index += 1
+                if filename == "test" or filename == "train" or filename == "valid":
+                    print(filename)
+                    continue
+                else:
+                    #print(filename)
+                    put_directory = directory_list[int(directory_index) % 3]
+                    print('put_directory: ', put_directory)
+
+                    old_path = self.data_dir + '/' + filename
+                    new_path = put_directory + filename
+                    print('old_path: ', old_path)
+                    print('new_path: ', new_path)
+                    os.rename( old_path, new_path)
+                    directory_index += 1
 
 
     #  Define your transforms for the training, validation, and testing sets
@@ -80,9 +90,9 @@ class Dataset():
                                                                      (0.229, 0.224, 0.225))])
 
         #  Load the datasets with ImageFolder
-        self.train_data = datasets.ImageFolder(self.train_dir, transform=train_transforms)
-        self.valid_data = datasets.ImageFolder(self.valid_dir, transform=validation_transforms)
-        self.test_data = datasets.ImageFolder(self.test_dir, transform=test_transforms)
+        self.train_data = datasets.ImageFolder(self.data_dir, transform=train_transforms)
+        self.valid_data = datasets.ImageFolder(self.data_dir, transform=validation_transforms)
+        self.test_data = datasets.ImageFolder(self.data_dir, transform=test_transforms)
 
 
     #  Using the image datasets and the trainforms, define the dataloaders
@@ -101,7 +111,8 @@ def main():
     parser.add_argument("-p", "--path", default="flowers", help="path to image dataset")
     args = parser.parse_args()
     c1 = Dataset(args.path)
-    #c1.transform()
+    c1.sort_images()
+    c1.transform()
 
 
 if __name__ == "__main__":
