@@ -37,6 +37,8 @@ class Dataset():
             os.mkdir(self.test_dir)
         except FileExistsError:
             print("Directory already Exists")
+        self.sort_images()
+        self.transform()
 
     def sort_images(self):
         dir_size = os.path.getsize(self.train_dir)
@@ -96,15 +98,11 @@ class Dataset():
 
 
     #  Using the image datasets and the trainforms, define the dataloaders
-    def trainloader(self):
-        torch.utils.data.DataLoader(self.train_data, batch_size=64, shuffle=True)
-
-    def validloader(self):
-        torch.utils.data.DataLoader(self.valid_data, batch_size=64)
-
-    def testloader(self):
-        torch.utils.data.DataLoader(self.test_data, batch_size=64)
-
+    def init_loaders(self):
+        trainloader=torch.utils.data.DataLoader(self.train_data, batch_size=64, shuffle=True)
+        validloader=torch.utils.data.DataLoader(self.valid_data, batch_size=64)
+        testloader=torch.utils.data.DataLoader(self.test_data, batch_size=64)
+        return trainloader, validloader, testloader
 
 def main():
     parser = argparse.ArgumentParser(description="Caclulate x to the power of Y")
