@@ -53,7 +53,7 @@ class Model:
                     '''
         self.device=self.setDevice()
         self.dataset=DS(self.datadir)
-
+        self.trainloader, self.validloader, self.testloader = self.dataset.init_loaders()
 
     def __str__(self):
         return '{0.__class__.__name__}:(\n\tarch={0.arch}\n ' \
@@ -79,7 +79,7 @@ class Model:
     # Freeze parameters so we don't backprop through them
 
     def create_classifier(self):
-        trainloader, validloader, testloader = self.dataset.init_loaders()
+
         for param in self.model.parameters():
             param.requires_grad = False
 
@@ -96,7 +96,7 @@ class Model:
         # Only train the classifier parameters, feature parameters are frozen
         optimizer = optim.Adam(self.model.classifier.parameters(), lr=0.003)
 
-        images, labels = next(iter(testloader))
+        images, labels = next(iter(self.validloader))
         # print('labels', labels)
         # print (images.size())
         # images = images[1:3]
@@ -124,9 +124,9 @@ class Model:
     #     train_losses, test_losses = [], []
     #     for epoch in range(epochs):
     #         running_loss = 0
-    #         for inputs, labels in trainloader:
+    #         for inputs, labels in self.trainloader:
     #
-    #             inputs, labels = inputs.to(device), labels.to(device)
+    #             inputs, labels = inputs.to(self.device), labels.to(self.device)
     #
     #             optimizer.zero_grad()
     #
@@ -258,8 +258,8 @@ def main():
 
     print(myModel)
     myModel.setModel()
-
     myModel.create_classifier()
+
 
 if __name__ == "__main__":
     main()
