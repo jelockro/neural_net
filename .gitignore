@@ -2,3 +2,5 @@ flowers/
 venv/
 .idea/workspace.xml
 .idea/
+jpg/
+*.pyc

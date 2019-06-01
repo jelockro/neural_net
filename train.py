@@ -10,7 +10,7 @@ import torch
 import os
 import argparse
 from load_data import Dataset as DS
-
+import helper
 
 
 
@@ -29,14 +29,6 @@ parser = argparse.ArgumentParser(
 
 class Model:
     current_dir = os.path.dirname(os.path.realpath(__file__))
-    parser = argparse.ArgumentParser(description="Caclulate x to the power of Y")
-    parser.add_argument('datadir', help="path to image dataset")
-    parser.add_argument("-s", "--save_dir", help="path to saved model")
-    parser.add_argument("-a", "--arch", default="vgg13", help="architecture of model")
-    parser.add_argument("-r", "--learning_rate", type=float, default=0.01, help="learning rate as float. Default: 0.01.")
-    parser.add_argument("--hidden_units", type=int, default="512", help="Number of hidden units. Default: 512.")
-    parser.add_argument("-e", "--epochs", type=int, default="20", help="Number of epochs. Default: 20")
-    parser.add_argument("--gpu", action='store_true', help="Turn on Cuda Usage")
 
     def __init__(self, datadir, save_dir=current_dir, **kwargs ):
         self.datadir = datadir
@@ -53,6 +45,7 @@ class Model:
                     '''
         self.device=self.setDevice()
         self.dataset=DS(self.datadir)
+        self.dataset.transform()
         self.trainloader, self.validloader, self.testloader = self.dataset.init_loaders()
 
     def __str__(self):
@@ -95,17 +88,22 @@ class Model:
 
         # Only train the classifier parameters, feature parameters are frozen
         optimizer = optim.Adam(self.model.classifier.parameters(), lr=0.003)
-
+        optimizer.zero_grad()
         images, labels = next(iter(self.validloader))
+        ### Validate that the images are the right size
+        print(images[0,:].size())
+        print(images.size())
+        print(labels[0])
+
         # print('labels', labels)
         # print (images.size())
         # images = images[1:3]
         # print('images', images.size())
         # images = images.view(1, -1)
 
-        # print(images.size())
-        # images = images.view(images.size(0), -1)
-        # print(images.size())
+        print(images.size())
+        images = images.view(images.size(0), -1)
+        print(images.size())
         ps = torch.exp(self.model(images))
         print("shape should be [64, 102]", ps.shape)
         top_p, top_class = ps.topk(1, dim=1)

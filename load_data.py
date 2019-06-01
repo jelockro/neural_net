@@ -1,10 +1,16 @@
 # Imports here
-import argparse
+from tkinter import *
 import torch
 from torchvision import datasets, transforms
 import json
 import os
+import matplotlib
+import matplotlib.pylab as plt
+import argparse
 
+
+matplotlib.use('tkagg')
+import numpy as np
 # create mapping of flower names to loaded_data_feautre index
 
 
@@ -25,20 +31,19 @@ class Dataset():
         self.train_dir = dir_path + '/' + data_dir + '/' + 'train' + '/'
         self.valid_dir = dir_path + '/' + data_dir + '/' + 'valid' + '/'
         self.test_dir = dir_path + '/' + data_dir + '/' + 'test' + '/'
-        try:
-            os.mkdir(self.train_dir)
-        except FileExistsError:
-            print("Directory already Exists")
-        try:
-            os.mkdir(self.valid_dir)
-        except FileExistsError:
-            print("Directory already Exists")
-        try:
-            os.mkdir(self.test_dir)
-        except FileExistsError:
-            print("Directory already Exists")
-        self.sort_images()
-        self.transform()
+        # try:
+        #     os.mkdir(self.train_dir)
+        # except FileExistsError:
+        #     print("Directory already Exists")
+        # try:
+        #     os.mkdir(self.valid_dir)
+        # except FileExistsError:
+        #     print("Directory already Exists")
+        # try:
+        #     os.mkdir(self.test_dir)
+        # except FileExistsError:
+        #     print("Directory already Exists")
+        #
 
     def sort_images(self):
         dir_size = os.path.getsize(self.train_dir)
@@ -47,7 +52,6 @@ class Dataset():
             print("Sub folders already exist and are populated. Directory size: {} bytes".format(dir_size))
 
         else:
-            print('oh no')
             directory_index = 0
             directory_list = [self.train_dir, self.valid_dir, self.test_dir]
 
@@ -102,15 +106,25 @@ class Dataset():
         trainloader=torch.utils.data.DataLoader(self.train_data, batch_size=64, shuffle=True)
         validloader=torch.utils.data.DataLoader(self.valid_data, batch_size=64)
         testloader=torch.utils.data.DataLoader(self.test_data, batch_size=64)
+        import helper
+        images, labels = next(iter(trainloader))
+        helper.imshow(images[0, :])
+        print(images[0, :].size())
+        print(images.size())
+        print('labels[0]: ',labels[0])
+        print('labels: ', labels)
+        print('len(labels): ', len(labels))
+        plt.show()
         return trainloader, validloader, testloader
 
 def main():
     parser = argparse.ArgumentParser(description="Caclulate x to the power of Y")
-    parser.add_argument("-p", "--path", default="flowers", help="path to image dataset")
+    parser.add_argument("-p", "--path", default="jpg", help="path to image dataset")
     args = parser.parse_args()
     c1 = Dataset(args.path)
-    c1.sort_images()
+    #c1.sort_images()
     c1.transform()
+    c1.init_loaders()
 
 
 if __name__ == "__main__":
