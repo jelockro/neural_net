@@ -118,7 +118,7 @@ class Dataset():
         return trainloader, validloader, testloader
 
 def main():
-    parser = argparse.ArgumentParser(description="Caclulate x to the power of Y")
+    parser = argparse.ArgumentParser(description="Loads your dataset")
     parser.add_argument("-p", "--path", default="jpg", help="path to image dataset")
     args = parser.parse_args()
     c1 = Dataset(args.path)
