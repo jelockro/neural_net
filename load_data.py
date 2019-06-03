@@ -106,15 +106,15 @@ class Dataset():
         trainloader=torch.utils.data.DataLoader(self.train_data, batch_size=64, shuffle=True)
         validloader=torch.utils.data.DataLoader(self.valid_data, batch_size=64)
         testloader=torch.utils.data.DataLoader(self.test_data, batch_size=64)
-        import helper
-        images, labels = next(iter(trainloader))
-        helper.imshow(images[0, :])
-        print(images[0, :].size())
-        print(images.size())
-        print('labels[0]: ',labels[0])
-        print('labels: ', labels)
-        print('len(labels): ', len(labels))
-        plt.show()
+        # import helper
+        # images, labels = next(iter(trainloader))
+        # helper.imshow(images[0, :])
+        # print(images[0, :].size())
+        # print(images.size())
+        # print('labels[0]: ',labels[0])
+        # print('labels: ', labels)
+        # print('len(labels): ', len(labels))
+        # plt.show()
         return trainloader, validloader, testloader
 
 def main():
