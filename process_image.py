@@ -3,10 +3,7 @@ import numpy as np
 import torch
 import argparse
 
-#### Only accepts .flowers's at the moment, no transform for alpha scales
-parser = argparse.ArgumentParser(description="Turns a flowers into pytorch tensor")
-parser.add_argument("image_path", action="store", dest="image_path" )
-args = parser.parse_args()
+
 
 
 def process_image(image_path):
@@ -73,9 +70,15 @@ def process_image(image_path):
     # print(torch_img)
     return torch_img
 
-def main(argv):
-    process_image(args.image_path)
+def main():
+    #### Only accepts .flowers's at the moment, no transform for alpha scales
+    parser = argparse.ArgumentParser(description="Turns a flower image into pytorch tensor")
+    parser.add_argument("image_path", action="store" )
+    args = parser.parse_args()
 
+    img = process_image(args.image_path)
+
+    
 if __name__ == '__main__':
     import sys
     main()
