@@ -5,3 +5,5 @@ venv/
 jpg/
 *.pyc
 *.pth
+.vscode/
+__pycache__/
