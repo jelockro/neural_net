@@ -219,7 +219,8 @@ class Model:
                        'output_size': 102,
                        'arch': self.arch,
                        'state_dict': self.model.state_dict(),
-                       'epoch': self.model.epochs
+                       'epoch': self.model.epochs,
+                       'class_to_idx': self.model.class_to_idx
         }
         print('\n\nsaving to {}.'.format(checkpoint_out))
         try:

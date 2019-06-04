@@ -27,9 +27,10 @@ from torchvision import datasets, transforms, models
 #
 # Use GPU for inference:
 # python predict.py /path/to/image checkpoint --gpu
-def load_model_checkpoint(checkpoint):
+
+def load_model_checkpoint(args):
     # determine model
-    checkpoint_provided = torch.load(checkpoint)
+    checkpoint_provided = torch.load(args.checkpoint)
     if checkpoint_provided['arch'] == 'vgg16':
         model = models.vgg16()        
     elif checkpoint_provided['arch'] == 'alexnet':
@@ -47,14 +48,14 @@ def load_model_checkpoint(checkpoint):
     else:
         print('Not a valid model.')
 
-    def rebuild(checkpoint):
+    def rebuild(args):
         #model = models.vgg11(pretrained=True)
         model.classifier = nn.Sequential(nn.Linear(512 * 7 * 7, 4000),
                                          nn.ReLU(),
                                          nn.Dropout(0.2),
                                          nn.Linear(4000, 1280),
-                                         nn.Linear(1280, self.hidden_units),
-                                         nn.Linear(self.hidden_units, 102),
+                                         nn.Linear(1280, args.hidden_units),
+                                         nn.Linear(args.hidden_units, 102),
                                          nn.LogSoftmax(dim=1))
         
         model.load_state_dict(checkpoint_provided['state_dict'])
@@ -62,7 +63,7 @@ def load_model_checkpoint(checkpoint):
         print(model)
         return model
 
-    loadedModel = rebuild(checkpoint)
+    loadedModel = rebuild(args)
     return loadedModel
 
 
@@ -85,7 +86,7 @@ def imshow(image, ax=None, title=None):
     image = np.clip(image, 0, 1)
 
     ax.imshow(image)
-    plt.show()
+    #
     return fig, (ax, ax2)
 
 def predict(image_path, model, topk):
@@ -96,7 +97,7 @@ def predict(image_path, model, topk):
     logps = model(img)
     ps = torch.exp(logps)
     top_ps, top_class = ps.topk(topk, dim=1)
-    #print(top_ps[0].tolist(), top_class.shape)
+    print(top_ps[0].tolist(), top_class.shape)
     return top_ps[0].tolist(), top_class[0].tolist()
 
 
@@ -124,6 +125,7 @@ def main():
     parser.add_argument("image_path", help="path to image")
     parser.add_argument("checkpoint", help="path to checkpoint")
     parser.add_argument("--category_names", help="file that contains category name map")
+    parser.add_argument("--hidden_units", type=int, default="512", help="Number of hidden units. Default: 512.")
     parser.add_argument("--gpu", action='store_true', help="Turn on Cuda Usage")
     parser.add_argument("--topk", type=int, default=5, help="Choose how many predictions")
     args = parser.parse_args()
@@ -135,7 +137,7 @@ def main():
         #fig, (ax1, ax2) = plt.subplots(2)
         model = torch.load(args.checkpoint)
         print(model.keys())
-        loadedModel = load_model_checkpoint(args.checkpoint)
+        loadedModel = load_model_checkpoint(args)
         
         topk_probs, topk_class_names = predict(args.image_path, loadedModel, args.topk)
         #print(top5_probs)
@@ -147,25 +149,25 @@ def main():
         # make the first plot the image ax from imshow
         fig, (axs, ax2) = imshow(flower_tensor_image)
         axs.axis('off')
-        index = str(top5_class_names[0])
+        index = str(topk_class_names[0])
         #print(index)
         #print(cat_to_name[index].upper())
         axs.set_title(cat_to_name[index].upper())
         list_of_names =[]
-        for i in range(len(top5_class_names)):
-            list_of_names.append(cat_to_name[str(top5_class_names[i])])
+        for i in range(len(topk_class_names)):
+            list_of_names.append(cat_to_name[str(topk_class_names[i])])
 
             #
             #plt.figure(figsize=(1,1))
-            y_pos = np.arange(len(top5_class_names))
-            ax2.barh(y_pos, list(reversed(top5_probs)))
+            y_pos = np.arange(len(topk_class_names))
+            ax2.barh(y_pos, list(reversed(topk_probs)))
             plt.yticks(y_pos, list(reversed(list_of_names)))
             print(type(ax2))
             print(type(axs))
             ax2.axis('auto')
-            #plt.ylabel('Flower Type')
-            #plt.xlabel('Class Probability')
-            plt.show()
+            plt.ylabel('Flower Type')
+            plt.xlabel('Class Probability')
+        plt.show()
     
 
 if __name__ == "__main__":
