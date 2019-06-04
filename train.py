@@ -114,7 +114,7 @@ class Model:
                                          nn.LogSoftmax(dim=1))
 
         self.criterion = nn.NLLLoss()
-
+        
         # Only train the classifier parameters, feature parameters are frozen
         self.optimizer = optim.Adam(self.model.classifier.parameters(), lr=0.003)
         #optimizer.zero_grad()
@@ -179,12 +179,7 @@ class Model:
                       "Test Loss: {:.3f}.. ".format(test_loss / len(self.validloader)),
                       "Test Accuracy: {:.3f}".format(accuracy / len(self.validloader)))
     
-    #
-    # def plot_test(self, train_losses, test_losses):
-    #     plt.plot(train_losses, label='Training loss')
-    #     plt.plot(test_losses, label='Validation loss')
-    #     plt.legend(frameon=False)
-    #
+
     def validate_model(self):
         test_loss = 0
         accuracy = 0
@@ -207,7 +202,7 @@ class Model:
         print("Test Loss: {:.3f}.. ".format(test_loss / len(self.testloader)),
         "Test Accuracy: {:.3f}".format(accuracy / len(self.testloader))
              )
-    #
+    
     def save_model_checkpoint(self):
         print("\nOur model: \n\n", self.model, '\n')
         self.model.epochs = self.epochs
@@ -228,7 +223,7 @@ class Model:
         except:
             print('Checkpoint did not save.')
         print('Checkpoint successful.')
-    #
+    
 
 ####################
 # Examples of usage
@@ -270,8 +265,8 @@ def main():
     print(myModel)
     myModel.setModel(myModel.arch)
     myModel.create_classifier()
-    #myModel.train_model()
-    #myModel.validate_model()
+    myModel.train_model()
+    myModel.validate_model()
     myModel.save_model_checkpoint()
 
 

@@ -60,7 +60,7 @@ def load_model_checkpoint(args):
         
         model.load_state_dict(checkpoint_provided['state_dict'])
         model.class_to_idx = checkpoint_provided['class_to_idx']
-        print(model)
+        #print(model)
         return model
 
     loadedModel = rebuild(args)
@@ -97,13 +97,8 @@ def predict(image_path, model, topk):
     logps = model(img)
     ps = torch.exp(logps)
     top_ps, top_class = ps.topk(topk, dim=1)
-    print(top_ps[0].tolist(), top_class.shape)
+    #print(top_ps[0].tolist(), top_class.shape)
     return top_ps[0].tolist(), top_class[0].tolist()
-
-
-#predict('flowers/test/1/image_06743.flowers', model , topk=5)
-
-# TODO: Display an image along with the top 5 classes
 
 
 ####################
