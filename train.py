@@ -20,12 +20,6 @@ import helper
 # print out training loss, validation loss, and validation accuracy
 
 
-
-parser = argparse.ArgumentParser(
-    description='This is AI'
-)
-
-
 class Model:
     current_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -113,10 +107,10 @@ class Model:
 
         self.model.classifier = nn.Sequential(nn.Linear(512 * 7 * 7, 4000),
                                          nn.ReLU(),
-                                         # nn.Dropout(0.2),
+                                         nn.Dropout(0.2),
                                          nn.Linear(4000, 1280),
-                                         nn.ReLU(),
-                                         nn.Linear(1280, 102),
+                                         nn.Linear(1280, self.hidden_units),
+                                         nn.Linear(self.hidden_units, 102),
                                          nn.LogSoftmax(dim=1))
 
         self.criterion = nn.NLLLoss()
@@ -216,36 +210,24 @@ class Model:
     #
     def save_model_checkpoint(self):
         print("\nOur model: \n\n", self.model, '\n')
+        self.model.epochs = self.epochs
+        self.model.class_to_idx = self.trainloader.dataset.class_to_idx
+        print('model.epochs: ', self.model.epochs)
         print("The state dict keys: \n\n", self.model.state_dict().keys())
-        checkpoint = self.save_dir + '/' + 'checkpoint2.pth'
-        print('\n\nsaving to {}.'.format(checkpoint))
+        checkpoint_out = self.save_dir + '/' + 'checkpoint2.pth'
+        checkpoint = { 'input_size': [3, 224, 224],
+                       'output_size': 102,
+                       'arch': self.arch,
+                       'state_dict': self.model.state_dict(),
+                       'epoch': self.model.epochs
+        }
+        print('\n\nsaving to {}.'.format(checkpoint_out))
         try:
-            torch.save(self.model.state_dict(), checkpoint)
+            torch.save(checkpoint, checkpoint_out)
         except:
             print('Checkpoint did not save.')
         print('Checkpoint successful.')
     #
-    def load_model_checkpoint(self, checkpoint):
-        # TODO: Write a function that loads a checkpoint and rebuilds the model
-        from torchvision import datasets, transforms, models
-        def rebuild(checkpoint):
-            model = models.vgg11(pretrained=True)
-            model.classifier = nn.Sequential(nn.Linear(512 * 7 * 7, 4000),
-                                             nn.ReLU(),
-                                             # nn.Dropout(0.2),
-                                             nn.Linear(4000, 1280),
-                                             nn.ReLU(),
-                                             nn.Linear(1280, 102),
-                                             nn.LogSoftmax(dim=1))
-            state_dict = torch.load(checkpoint)
-            model.class_to_idx = train_data.class_to_idx
-            print(model.class_to_idx)
-            model.load_state_dict(state_dict)
-            print(model)
-            return model
-    
-        loadedModel = rebuild('checkpoint2.pth')
-        return loadedModel
 
 ####################
 # Examples of usage
@@ -287,8 +269,8 @@ def main():
     print(myModel)
     myModel.setModel(myModel.arch)
     myModel.create_classifier()
-    myModel.train_model()
-    myModel.validate_model()
+    #myModel.train_model()
+    #myModel.validate_model()
     myModel.save_model_checkpoint()
 
 

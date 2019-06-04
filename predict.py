@@ -3,6 +3,8 @@ mpl.use('tkagg')
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from torch import nn
+from torch import optim
 import argparse
 from process_image import process_image
 import torch.nn.functional as F
@@ -26,25 +28,41 @@ from torchvision import datasets, transforms, models
 # Use GPU for inference:
 # python predict.py /path/to/image checkpoint --gpu
 def load_model_checkpoint(checkpoint):
-    # TODO: Write a function that loads a checkpoint and rebuilds the model
-    from torchvision import datasets, transforms, models
+    # determine model
+    checkpoint_provided = torch.load(checkpoint)
+    if checkpoint_provided['arch'] == 'vgg16':
+        model = models.vgg16()        
+    elif checkpoint_provided['arch'] == 'alexnet':
+        model = odels.alexnet(pretrained=True)
+    elif checkpoint_provided['arch'] == 'vgg11':
+        model = models.vgg11(pretrained=True)        
+    elif checkpoint_provided['arch'] == 'vgg13':
+        model = models.vgg13(pretrained=True)
+    elif checkpoint_provided['arch'] == 'vgg':
+        model = models.vgg16()        
+    elif checkpoint_provided['arch'] == 'squeezenet':
+        model = models.squeezenet1_0(pretrained=True)
+    elif checkpoint_provided['arch'] == 'inception':
+        model = models.inception_v3(pretrained=True)
+    else:
+        print('Not a valid model.')
+
     def rebuild(checkpoint):
         #model = models.vgg11(pretrained=True)
         model.classifier = nn.Sequential(nn.Linear(512 * 7 * 7, 4000),
                                          nn.ReLU(),
-                                         # nn.Dropout(0.2),
+                                         nn.Dropout(0.2),
                                          nn.Linear(4000, 1280),
-                                         nn.ReLU(),
-                                         nn.Linear(1280, 102),
+                                         nn.Linear(1280, self.hidden_units),
+                                         nn.Linear(self.hidden_units, 102),
                                          nn.LogSoftmax(dim=1))
-        state_dict = torch.load(checkpoint)
-        model.class_to_idx = train_data.class_to_idx
-        print(model.class_to_idx)
-        model.load_state_dict(state_dict)
+        
+        model.load_state_dict(checkpoint_provided['state_dict'])
+        model.class_to_idx = checkpoint_provided['class_to_idx']
         print(model)
         return model
 
-    loadedModel = rebuild('checkpoint2.pth')
+    loadedModel = rebuild(checkpoint)
     return loadedModel
 
 
@@ -70,7 +88,7 @@ def imshow(image, ax=None, title=None):
     plt.show()
     return fig, (ax, ax2)
 
-def predict(image_path, model, topk=5):
+def predict(image_path, model, topk):
     ''' Predict the class (or classes) of an image using a trained deep learning model.
     '''
     img = process_image(image_path)
@@ -80,22 +98,49 @@ def predict(image_path, model, topk=5):
     top_ps, top_class = ps.topk(topk, dim=1)
     #print(top_ps[0].tolist(), top_class.shape)
     return top_ps[0].tolist(), top_class[0].tolist()
-    # TODO: Implement the code to predict the class from an image file
+
+
+#predict('flowers/test/1/image_06743.flowers', model , topk=5)
+
+# TODO: Display an image along with the top 5 classes
+
+
+####################
+# Examples of usage
+####################
+#
+# Return top K most likely classes
+# python predict.py /path/to/image checkpoint --top_k 3
+#
+# Use a mapping of categories to real names
+# python predict.py /path/to/image checkpoint --category_names cat_to_name.json
+#
+# Use GPU for inference:
+# python predict.py /path/to/image checkpoint --gpu
+
+# ex python predict.py flowers/test/1/image_06743.jpg checkpoint2.pth
+def main():
+    parser = argparse.ArgumentParser(description="Predicts image based on loaded model")
+    parser.add_argument("image_path", help="path to image")
+    parser.add_argument("checkpoint", help="path to checkpoint")
+    parser.add_argument("--category_names", help="file that contains category name map")
+    parser.add_argument("--gpu", action='store_true', help="Turn on Cuda Usage")
+    parser.add_argument("--topk", type=int, default=5, help="Choose how many predictions")
+    args = parser.parse_args()
+    import json
+    # # TODO: Implement the code to predict the class from an image file
     with open('cat_to_name.json', 'r') as f:
         cat_to_name = json.load(f)
-
-
         # # instantiate the stacked plots
         #fig, (ax1, ax2) = plt.subplots(2)
-
-        #path = 'flowers/test/1/image_06743.flowers'
-        path = 'flowers/test/1/image_06764.flowers'
-        loadedmodel = load_model_checkpoint(args.checkpoint)
-        top5_probs, top5_class_names = predict(path, loadedModel,5)
+        model = torch.load(args.checkpoint)
+        print(model.keys())
+        loadedModel = load_model_checkpoint(args.checkpoint)
+        
+        topk_probs, topk_class_names = predict(args.image_path, loadedModel, args.topk)
         #print(top5_probs)
         #print(top5_class_names)
-
-        flower_tensor_image = process_image(path)
+        flower_tensor_image = process_image(args.image_path)
         # = torch.from_numpy(flower_np_image).type(torch.cuda.FloatTensor)
         #flower_tensor_image = flower_tensor_image.unsqueeze_(0)
 
@@ -121,37 +166,6 @@ def predict(image_path, model, topk=5):
             #plt.ylabel('Flower Type')
             #plt.xlabel('Class Probability')
             plt.show()
-#predict('flowers/test/1/image_06743.flowers', model , topk=5)
-
-# TODO: Display an image along with the top 5 classes
-
-
-####################
-# Examples of usage
-####################
-#
-# Return top K most likely classes
-# python predict.py /path/to/image checkpoint --top_k 3
-#
-# Use a mapping of categories to real names
-# python predict.py /path/to/image checkpoint --category_names cat_to_name.json
-#
-# Use GPU for inference:
-# python predict.py /path/to/image checkpoint --gpu
-
-# ex python predict.py flowers/test/1/image_06743.jpg checkpoint.pth
-def main():
-    parser = argparse.ArgumentParser(description="Predicts image based on loaded model")
-    parser.add_argument("image_path", help="path to image")
-    parser.add_argument("checkpoint", help="path to checkpoint")
-    parser.add_argument("--category_names", help="file that contains category name map")
-    parser.add_argument("--gpu", action='store_true', help="Turn on Cuda Usage")
-    parser.add_argument("--topk", type=int , help="Choose how many predictions")
-    args = parser.parse_args()
-    tensor_image = process_image(args.image_path)
-    imshow(tensor_image)
-    import json
-
     
 
 if __name__ == "__main__":
