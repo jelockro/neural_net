@@ -4,4 +4,4 @@ venv/
 .idea/
 jpg/
 *.pyc
-*pth
+*.pth
